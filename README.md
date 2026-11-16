@@ -8,19 +8,22 @@
 - `otpauth://` URI를 담은 QR 코드의 브라우저 내 렌더링
 - 30초 주기의 6자리 TOTP와 남은 시간 표시
 - 스마트폰 Authenticator 앱의 코드를 입력해 검증하는 로그인 시뮬레이션
+- Unix Timestamp, 30초 카운터, 이전·현재·다음 OTP를 확인하는 시계 진단 패널
 
 ## TOTP 작동 원리
 
 RFC 6238은 시간 기반 OTP를 정의하며, 이 프로젝트는 표준 기본값인 30초 시간 간격, HMAC-SHA1, 6자리 코드를 사용합니다. 비밀 키와 현재 Unix 시간으로부터 계산한 카운터를 사용해 매 시간 구간마다 같은 코드를 생성합니다.
 
 ```text
-Base32 Secret + floor(Unix Timestamp / 30)
+Base32 Secret + floor(Unix Timestamp / 30) 카운터 (64-bit Big-Endian)
     -> HMAC-SHA1
     -> RFC 4226 Dynamic Truncation
     -> 6-digit OTP (앞자리 0 포함)
 ```
 
 QR 코드에는 Authenticator 앱이 키와 계정 정보를 등록할 수 있도록 `otpauth://totp/...` URI를 담습니다. 브라우저 화면의 OTP와 등록된 앱의 OTP가 일치하면 로그인 시뮬레이션이 성공합니다. 두 기기의 시계가 크게 어긋나면 코드가 다를 수 있으므로 기기의 날짜 및 시간 자동 설정을 켜 두세요.
+
+화면 하단의 임시 시간 동기화 진단 패널에서 브라우저의 Unix Timestamp와 30초 카운터를 확인하고, 이전·현재·다음 구간의 코드를 비교할 수 있습니다. 표준시와 브라우저 시간을 비교해 clock drift를 점검할 때 사용하세요.
 
 ## 프로젝트 구조
 
@@ -35,7 +38,7 @@ src/
 └── assets/              # 정적 이미지 및 아이콘
 ```
 
-`src/utils/totp.js`는 UI와 암호화 로직을 분리합니다. `generateSecret()`은 `window.crypto.getRandomValues()`로 키를 만들고, `base32ToBytes()`는 Base32 문자열을 디코딩합니다. `generateTOTP()`는 Web Crypto API로 HMAC-SHA1과 동적 절단을 수행하며, `generateOtpAuthUri()`는 QR 등록용 URI를 구성합니다. 화면은 이 모듈의 함수만 호출해 등록과 검증을 처리합니다.
+`src/utils/totp.js`는 UI와 암호화 로직을 분리합니다. `generateSecret()`은 `window.crypto.getRandomValues()`로 키를 만들고, `base32ToBytes()`는 Base32 문자열을 디코딩합니다. `generateTOTP()`는 현재 시각의 코드를, `generateTOTPAtTime()`은 진단용 지정 시각의 코드를 Web Crypto API로 계산합니다. 두 함수는 HMAC-SHA1과 동적 절단을 사용하며, 64-bit 카운터를 `DataView.setBigUint64()`의 Big-Endian 형식으로 기록합니다. `generateOtpAuthUri()`는 Base32 Secret을 검증·정규화한 뒤 QR 등록용 URI를 구성합니다. 화면은 이 모듈을 호출해 등록과 검증을 처리합니다.
 
 ## 보안 설계 및 검증
 
@@ -56,7 +59,7 @@ src/
 
 ### 구현 검증
 
-`generateTOTP()`의 RFC 6238 SHA-1 테스트 벡터를 확인했습니다. 테스트용 비밀 키 `12345678901234567890`에 대해 Unix 시간 `59`초일 때 8자리 결과는 `94287082`, `1111111109`초일 때는 `07081804`입니다. 실제 앱에서는 과제 요구사항에 맞게 6자리 코드를 사용합니다.
+RFC 6238 SHA-1 테스트 벡터에서 테스트용 비밀 키 `12345678901234567890`의 Unix 시간 `59`초 결과 `94287082`, `1111111109`초 결과 `07081804`를 확인했습니다. 32-bit 경계를 넘는 카운터의 Big-Endian 처리와 `otpauth` Secret 정규화도 확인했습니다. 실제 앱에서는 과제 요구사항에 맞게 6자리 코드를 사용합니다.
 
 ## 로컬 실행
 

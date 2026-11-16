@@ -84,8 +84,8 @@
   ```bash
   npm test
   ```
-- **Netlify 배포 URL**: `https://<사이트이름>.netlify.app` *(배포 후 등록)*
-- **GitHub Pages 배포 URL**: `https://<내아이디>.github.io/26-w11-mobile-otp/` *(배포 후 등록)*
+- **Netlify 배포 URL**: `https://otp-11.netlify.app/` 
+- **GitHub Pages 배포 URL**: `https://taeyoon-hack.github.io/26-w11-mobile-otp/` 
 
 ---
 

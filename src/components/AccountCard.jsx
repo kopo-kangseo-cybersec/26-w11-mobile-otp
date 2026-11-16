@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { KeyRound, ShieldCheck } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Check, Copy, KeyRound, ShieldCheck, Trash2 } from 'lucide-react'
 import { generateTOTP } from '../utils/totp.js'
 
 const PERIOD_SECONDS = 30
 const TIMER_RADIUS = 19
 const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS
 
-function AccountCard({ account }) {
+function AccountCard({ account, onDelete }) {
   const [now, setNow] = useState(Date.now())
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -14,6 +14,8 @@ function AccountCard({ account }) {
   const [verificationCode, setVerificationCode] = useState('')
   const [verificationStatus, setVerificationStatus] = useState(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [copyStatus, setCopyStatus] = useState('')
+  const copyTimeoutRef = useRef(null)
   const currentStep = Math.floor(now / 1000 / PERIOD_SECONDS)
   const remaining = PERIOD_SECONDS - ((now / 1000) % PERIOD_SECONDS)
   const secondsRemaining = Math.ceil(remaining)
@@ -24,6 +26,13 @@ function AccountCard({ account }) {
     const timerId = window.setInterval(() => setNow(Date.now()), 250)
     return () => window.clearInterval(timerId)
   }, [])
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(copyTimeoutRef.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     let isCurrent = true
@@ -100,6 +109,33 @@ function AccountCard({ account }) {
     }
   }
 
+  async function handleCopy() {
+    if (!code) return
+
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopyStatus('복사됨')
+      window.clearTimeout(copyTimeoutRef.current)
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopyStatus('')
+      }, 1800)
+    } catch (copyError) {
+      setCopyStatus(
+        copyError instanceof Error
+          ? '복사할 수 없습니다. 브라우저 권한을 확인해 주세요.'
+          : '복사할 수 없습니다.',
+      )
+    }
+  }
+
+  function handleDelete() {
+    const confirmed = window.confirm(
+      `${account.serviceName} (${account.accountName}) 계정을 삭제할까요?\n\n스마트폰 인증기 앱의 항목은 따로 지워야 합니다`,
+    )
+
+    if (confirmed) onDelete(account.secret)
+  }
+
   return (
     <article className="account-card">
       <div className="account-card-heading">
@@ -150,6 +186,26 @@ function AccountCard({ account }) {
         <span>30초마다 자동 갱신</span>
       </div>
 
+      <div className="account-actions">
+        <button
+          className="account-action-button copy-action"
+          type="button"
+          onClick={handleCopy}
+          disabled={!code}
+        >
+          {copyStatus === '복사됨' ? <Check size={15} /> : <Copy size={15} />}
+          {copyStatus || '코드 복사'}
+        </button>
+        <button
+          className="account-action-button delete-action"
+          type="button"
+          onClick={handleDelete}
+        >
+          <Trash2 size={15} />
+          삭제
+        </button>
+      </div>
+
       <button
         className="verification-toggle"
         type="button"
@@ -160,6 +216,12 @@ function AccountCard({ account }) {
         <ShieldCheck size={15} />
         {isVerificationOpen ? '검증 닫기' : '코드 검증'}
       </button>
+
+      {copyStatus && copyStatus !== '복사됨' && (
+        <p className="account-action-error" role="alert">
+          {copyStatus}
+        </p>
+      )}
 
       {isVerificationOpen && (
         <form

@@ -84,6 +84,12 @@ function App() {
     setIsAddModalOpen(false)
   }
 
+  function handleAccountDelete(secret) {
+    setAccounts((currentAccounts) =>
+      currentAccounts.filter((account) => account.secret !== secret),
+    )
+  }
+
   const accountCount = accounts.length
 
   return (
@@ -151,7 +157,11 @@ function App() {
         ) : (
           <section className="account-grid" aria-label="등록된 OTP 계정">
             {accounts.map((account) => (
-              <AccountCard key={account.secret} account={account} />
+              <AccountCard
+                key={account.secret}
+                account={account}
+                onDelete={handleAccountDelete}
+              />
             ))}
           </section>
         )}

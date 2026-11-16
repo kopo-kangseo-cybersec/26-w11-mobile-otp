@@ -70,7 +70,15 @@ npm install
 npm run dev
 ```
 
-터미널에 표시되는 로컬 주소(일반적으로 `http://localhost:5173`)를 브라우저에서 엽니다. 배포용 빌드는 다음 명령으로 확인할 수 있습니다.
+터미널에 표시되는 로컬 주소(일반적으로 `http://localhost:5173`)를 브라우저에서 엽니다. VS Code의 **Go Live** 버튼(Live Server, 기본 포트 `5500`)은 정적 파일 서버이므로 Vite의 React 플러그인이 필요한 JSX 앱을 실행할 수 없습니다. 앱은 반드시 `npm run dev`로 실행하세요.
+
+Vite를 `5500` 포트에서 열고 싶다면 다음처럼 실행할 수 있습니다. 이 경우에도 포트를 여는 서버는 Go Live가 아니라 Vite입니다.
+
+```bash
+npm run dev -- --port 5500 --strictPort
+```
+
+`--strictPort`는 `5500` 포트를 사용할 수 없을 때 다른 포트로 자동 변경하지 않고 오류를 표시합니다. 배포용 빌드는 다음 명령으로 확인할 수 있습니다.
 
 ```bash
 npm run build

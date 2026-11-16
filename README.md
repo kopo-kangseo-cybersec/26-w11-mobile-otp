@@ -107,6 +107,10 @@ GitHub 저장소의 **Settings → Pages → Build and deployment**에서 **Sour
 
 이후 앱 코드를 수정할 때마다 `npm run build`를 다시 실행하고 생성된 `docs/` 변경 사항을 커밋·푸시해야 Pages 사이트가 갱신됩니다.
 
+## Netlify 배포
+
+저장소의 `netlify.toml`에서 빌드 명령은 `npm run build`, 게시 폴더는 Vite 출력 경로인 `docs`로 설정합니다. Netlify에서 GitHub 저장소를 연결할 때 배포 브랜치로 `dev`를 선택하세요. Netlify 설정 화면에서 게시 폴더를 직접 입력해야 한다면 `dist`가 아니라 `docs`를 지정합니다. 저장소에 새 변경 사항을 푸시하면 Netlify가 다시 빌드하고 배포합니다.
+
 ## Authenticator 앱 연동 테스트
 
 1. 페이지를 열면 기본 발급자와 계정명의 비밀 키 및 QR 코드가 자동으로 표시됩니다. 원하는 계정 정보로 등록하려면 발급자·계정명을 먼저 입력하고 **새 비밀 키 발급**을 누릅니다.

@@ -5,6 +5,7 @@ import {
   generateOtpAuthUri,
   generateSecret,
   generateTOTP,
+  generateTOTPAtTime,
 } from './utils/totp.js'
 import './App.css'
 
@@ -13,6 +14,7 @@ function App() {
   const [accountName, setAccountName] = useState('user@example.com')
   const [secret, setSecret] = useState('')
   const [otp, setOtp] = useState('')
+  const [debugOtps, setDebugOtps] = useState(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [verificationCode, setVerificationCode] = useState('')
   const [feedback, setFeedback] = useState(null)
@@ -36,12 +38,20 @@ function App() {
   const secondsRemaining = 30 - (Math.floor(currentTime / 1000) % 30)
 
   useEffect(() => {
-    if (!secret) return
+    if (!secret || timeCounter === 0) return
 
     let active = true
-    generateTOTP(secret)
-      .then((code) => {
-        if (active) setOtp(code)
+    const counterTimestamp = timeCounter * 30_000
+    Promise.all([
+      generateTOTPAtTime(secret, counterTimestamp - 30_000),
+      generateTOTPAtTime(secret, counterTimestamp),
+      generateTOTPAtTime(secret, counterTimestamp + 30_000),
+    ])
+      .then(([previous, current, next]) => {
+        if (active) {
+          setOtp(current)
+          setDebugOtps({ previous, current, next })
+        }
       })
       .catch((cause) => {
         if (active) setError(`OTP를 생성하지 못했습니다: ${cause.message}`)
@@ -61,6 +71,7 @@ function App() {
     try {
       setSecret(generateSecret())
       setOtp('')
+      setDebugOtps(null)
       setVerificationCode('')
       setFeedback(null)
       setError('')
@@ -263,6 +274,32 @@ function App() {
         <span><LockKeyhole size={14} /> 비밀 키와 인증 코드는 브라우저 안에서만 처리됩니다.</span>
         <span>HMAC-SHA1 · RFC 6238</span>
       </footer>
+
+      <section className="debug-panel" aria-labelledby="debug-title">
+        <div className="debug-heading">
+          <div>
+            <span className="debug-label">TEMPORARY DIAGNOSTICS</span>
+            <h2 id="debug-title">시간 동기화 디버그</h2>
+          </div>
+          <span className="debug-badge">개발용</span>
+        </div>
+        <div className="debug-metrics">
+          <div className="debug-metric">
+            <span>브라우저 Unix Timestamp</span>
+            <code>{currentTime ? Math.floor(currentTime / 1000) : '대기 중'}</code>
+          </div>
+          <div className="debug-metric">
+            <span>현재 30초 카운터</span>
+            <code>{currentTime ? timeCounter : '대기 중'}</code>
+          </div>
+        </div>
+        <div className="debug-otp-list">
+          <div><span>이전 · −30초</span><code>{debugOtps?.previous ?? '------'}</code></div>
+          <div className="debug-current"><span>현재</span><code>{debugOtps?.current ?? '------'}</code></div>
+          <div><span>다음 · +30초</span><code>{debugOtps?.next ?? '------'}</code></div>
+        </div>
+        <p className="debug-note">Unix Timestamp를 신뢰할 수 있는 표준시와 비교해 기기 시계 오차를 확인하세요.</p>
+      </section>
     </main>
   )
 }

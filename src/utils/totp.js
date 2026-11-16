@@ -41,11 +41,22 @@ export function base32ToBytes(base32) {
     throw new TypeError('Base32 secret must be a string.')
   }
 
-  const normalized = base32.replace(/\s/g, '').replace(/=/g, '').toUpperCase()
+  const input = base32.replace(/\s/g, '').toUpperCase()
+  const paddingIndex = input.indexOf('=')
+  const normalized = paddingIndex === -1 ? input : input.slice(0, paddingIndex)
   const remainder = normalized.length % 8
 
   if (![0, 2, 4, 5, 7].includes(remainder)) {
     throw new Error('Invalid Base32 string length.')
+  }
+
+  if (paddingIndex !== -1) {
+    const padding = input.slice(paddingIndex)
+    const expectedPadding = { 0: 0, 2: 6, 4: 4, 5: 3, 7: 1 }[remainder]
+
+    if (padding !== '='.repeat(expectedPadding) || input.length % 8 !== 0) {
+      throw new Error('Invalid Base32 padding.')
+    }
   }
 
   const bytes = new Uint8Array(Math.floor((normalized.length * 5) / 8))
@@ -78,12 +89,24 @@ export function base32ToBytes(base32) {
   return bytes
 }
 
-export async function generateTOTP(secret, timeStep = 30, digits = 6) {
+export function generateTOTP(secret, timeStep = 30, digits = 6) {
+  return generateTOTPAtTime(secret, Date.now(), timeStep, digits)
+}
+
+export async function generateTOTPAtTime(
+  secret,
+  timestamp = Date.now(),
+  timeStep = 30,
+  digits = 6,
+) {
   if (!Number.isSafeInteger(timeStep) || timeStep < 1) {
     throw new RangeError('Time step must be a positive integer.')
   }
   if (!Number.isSafeInteger(digits) || digits < 1 || digits > 10) {
     throw new RangeError('Digits must be an integer between 1 and 10.')
+  }
+  if (!Number.isFinite(timestamp) || timestamp < 0) {
+    throw new RangeError('Timestamp must be a non-negative number of milliseconds.')
   }
   if (typeof window === 'undefined' || !window.crypto?.subtle) {
     throw new Error('Web Crypto API is unavailable.')
@@ -94,17 +117,14 @@ export async function generateTOTP(secret, timeStep = 30, digits = 6) {
     throw new Error('Base32 secret must not be empty.')
   }
 
-  const counter = Math.floor(Date.now() / 1000 / timeStep)
-  if (!Number.isSafeInteger(counter)) {
+  const numericCounter = Math.floor(timestamp / 1000 / timeStep)
+  if (!Number.isSafeInteger(numericCounter)) {
     throw new RangeError('Time counter is outside the supported range.')
   }
+  const counter = BigInt(numericCounter)
 
   const counterBuffer = new ArrayBuffer(8)
-  const counterView = new DataView(counterBuffer)
-  const high = Math.floor(counter / 0x100000000)
-  const low = counter % 0x100000000
-  counterView.setUint32(0, high, false)
-  counterView.setUint32(4, low, false)
+  new DataView(counterBuffer).setBigUint64(0, counter, false)
 
   const key = await window.crypto.subtle.importKey(
     'raw',
@@ -113,20 +133,25 @@ export async function generateTOTP(secret, timeStep = 30, digits = 6) {
     false,
     ['sign'],
   )
-  const signature = new Uint8Array(
+  const hmacDigest = new Uint8Array(
     await window.crypto.subtle.sign('HMAC', key, counterBuffer),
   )
-  const offset = signature[signature.length - 1] & 0x0f
+  const offset = hmacDigest[19] & 0x0f
   const binary =
-    ((signature[offset] & 0x7f) * 0x1000000) +
-    (signature[offset + 1] << 16) +
-    (signature[offset + 2] << 8) +
-    signature[offset + 3]
+    new DataView(hmacDigest.buffer, hmacDigest.byteOffset, hmacDigest.byteLength)
+      .getUint32(offset, false) & 0x7fffffff
   const otp = binary % 10 ** digits
 
   return String(otp).padStart(digits, '0')
 }
 
 export function generateOtpAuthUri(secret, accountName, issuer) {
-  return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(accountName)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`
+  const secretBytes = base32ToBytes(secret)
+  if (secretBytes.length === 0) {
+    throw new Error('Base32 secret must not be empty.')
+  }
+
+  const normalizedSecret = secret.replace(/\s/g, '').replace(/=/g, '').toUpperCase()
+
+  return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(accountName)}?secret=${encodeURIComponent(normalizedSecret)}&issuer=${encodeURIComponent(issuer)}`
 }

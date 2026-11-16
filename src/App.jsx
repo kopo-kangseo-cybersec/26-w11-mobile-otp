@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { KeyRound, Plus, ShieldCheck } from 'lucide-react'
 import AddModal from './components/AddModal.jsx'
+import AccountCard from './components/AccountCard.jsx'
 import './App.css'
 
 function App() {
-  const [accountCount, setAccountCount] = useState(0)
+  const [accounts, setAccounts] = useState([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  function handleAccountComplete() {
-    setAccountCount((count) => count + 1)
+  function handleAccountComplete(account) {
+    setAccounts((currentAccounts) => [...currentAccounts, account])
     setIsAddModalOpen(false)
   }
+
+  const accountCount = accounts.length
 
   return (
     <div className="app-shell">
@@ -47,32 +50,34 @@ function App() {
           </div>
         </section>
 
-        <section className="empty-state" aria-labelledby="empty-title">
-          <div className="empty-visual" aria-hidden="true">
-            <div className="empty-orbit empty-orbit-outer" />
-            <div className="empty-orbit empty-orbit-inner" />
-            <div className="empty-key">
-              <KeyRound size={32} strokeWidth={1.7} />
+        {accountCount === 0 ? (
+          <section className="empty-state" aria-labelledby="empty-title">
+            <div className="empty-visual" aria-hidden="true">
+              <div className="empty-orbit empty-orbit-outer" />
+              <div className="empty-orbit empty-orbit-inner" />
+              <div className="empty-key">
+                <KeyRound size={32} strokeWidth={1.7} />
+              </div>
+              <span className="orbit-dot orbit-dot-top" />
+              <span className="orbit-dot orbit-dot-side" />
             </div>
-            <span className="orbit-dot orbit-dot-top" />
-            <span className="orbit-dot orbit-dot-side" />
-          </div>
-          <p className="eyebrow">START YOUR VAULT</p>
-          <h2 id="empty-title">
-            {accountCount === 0
-              ? '첫 OTP 계정을 추가해 보세요'
-              : '계정 등록이 완료되었습니다'}
-          </h2>
-          <p className="empty-description">
-            {accountCount === 0
-              ? '아래 + 버튼으로 계정을 추가하고 QR 코드를 인증기 앱으로 스캔하세요.'
-              : '다음 단계에서 인증 코드와 등록 계정 목록을 연결합니다.'}
-          </p>
-          <div className="empty-note">
-            <span className="note-indicator" />
-            비밀 키는 이 브라우저 안에서 생성됩니다.
-          </div>
-        </section>
+            <p className="eyebrow">START YOUR VAULT</p>
+            <h2 id="empty-title">첫 OTP 계정을 추가해 보세요</h2>
+            <p className="empty-description">
+              아래 + 버튼으로 계정을 추가하고 QR 코드를 인증기 앱으로 스캔하세요.
+            </p>
+            <div className="empty-note">
+              <span className="note-indicator" />
+              비밀 키는 이 브라우저 안에서 생성됩니다.
+            </div>
+          </section>
+        ) : (
+          <section className="account-grid" aria-label="등록된 OTP 계정">
+            {accounts.map((account) => (
+              <AccountCard key={account.secret} account={account} />
+            ))}
+          </section>
+        )}
       </main>
 
       <button

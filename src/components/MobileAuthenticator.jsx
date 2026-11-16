@@ -11,9 +11,9 @@ import {
 import { generateTOTP, getRemainingSeconds } from '../utils/totp';
 
 export default function MobileAuthenticator({
-  secret,
-  issuer,
-  account,
+  secret = '',
+  issuer = 'KopoCyberSec',
+  account = 'student@kopo.ac.kr',
   onFillVerificationInput
 }) {
   const [otpCode, setOtpCode] = useState('------');
@@ -40,6 +40,11 @@ export default function MobileAuthenticator({
       setRemainingSeconds(remaining);
 
       // 3) TOTP 6자리 계산 (RFC 6238)
+      if (!secret) {
+        if (isMounted) setOtpCode('------');
+        return;
+      }
+
       try {
         const code = await generateTOTP(secret, now.getTime(), 30);
         if (isMounted) {
@@ -48,7 +53,7 @@ export default function MobileAuthenticator({
         }
       } catch (err) {
         if (isMounted) {
-          setCalcError(err.message);
+          setCalcError(err.message || 'OTP 계산 오류');
           setOtpCode('ERROR');
         }
       }
@@ -69,11 +74,11 @@ export default function MobileAuthenticator({
   // 3자리씩 띄어쓰기 포맷팅 (예: "123 456")
   const formattedOtp = otpCode && otpCode.length === 6 
     ? `${otpCode.substring(0, 3)} ${otpCode.substring(3, 6)}` 
-    : otpCode;
+    : (otpCode || '------');
 
   // 검증기 입력창으로 바로 채워넣는 편의 버튼
   const handleAutoFill = () => {
-    if (otpCode && otpCode.length === 6 && otpCode !== 'ERROR') {
+    if (otpCode && otpCode.length === 6 && otpCode !== 'ERROR' && typeof onFillVerificationInput === 'function') {
       onFillVerificationInput(otpCode);
       setHasCopiedToVerifier(true);
       setTimeout(() => setHasCopiedToVerifier(false), 2000);
@@ -164,7 +169,7 @@ export default function MobileAuthenticator({
               type="button"
               className={`btn btn-copy-otp ${hasCopiedToVerifier ? 'copied-done' : ''}`}
               onClick={handleAutoFill}
-              disabled={otpCode.length !== 6 || otpCode === 'ERROR'}
+              disabled={(otpCode || '').length !== 6 || otpCode === 'ERROR'}
             >
               {hasCopiedToVerifier ? (
                 <>

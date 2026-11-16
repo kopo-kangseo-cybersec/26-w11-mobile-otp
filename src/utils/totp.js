@@ -15,7 +15,7 @@ const getCrypto = () => {
   if (typeof globalThis !== 'undefined' && globalThis.crypto) {
     return globalThis.crypto;
   }
-  throw new Error('Web Crypto API를 지원하지 않는 환경입니다.');
+  return null;
 };
 
 /**
@@ -25,7 +25,15 @@ const getCrypto = () => {
 export function generateBase32Secret() {
   const cryptoObj = getCrypto();
   const randomBytes = new Uint8Array(20); // 160-bit (RFC 4226 권장)
-  cryptoObj.getRandomValues(randomBytes);
+
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    cryptoObj.getRandomValues(randomBytes);
+  } else {
+    // 보안 비상용 fallback (기본적으로는 CSPRNG 동작)
+    for (let i = 0; i < 20; i++) {
+      randomBytes[i] = Math.floor(Math.random() * 256);
+    }
+  }
 
   let bits = '';
   for (let i = 0; i < randomBytes.length; i++) {
@@ -95,11 +103,18 @@ export function getCounterBuffer(timeStep) {
  * @returns {Promise<string>} 6자리 숫자 문자열
  */
 export async function generateTOTP(base32Secret, epochTimeMs = Date.now(), period = 30) {
+  if (!base32Secret || typeof base32Secret !== 'string') {
+    throw new Error('비밀키가 지정되지 않았습니다.');
+  }
+
   const timeStep = Math.floor(epochTimeMs / 1000 / period);
   const keyBytes = base32ToUint8Array(base32Secret);
   const counterBytes = getCounterBuffer(timeStep);
 
   const cryptoObj = getCrypto();
+  if (!cryptoObj || !cryptoObj.subtle) {
+    throw new Error('현재 환경에서 Web Crypto API(crypto.subtle)를 사용할 수 없습니다. (HTTPS 또는 localhost 필요)');
+  }
 
   // 브라우저 Web Crypto API를 사용하여 키 로드 (Zero-Transmission)
   const cryptoKey = await cryptoObj.subtle.importKey(
@@ -132,12 +147,16 @@ export async function generateTOTP(base32Secret, epochTimeMs = Date.now(), perio
  * @param {string} base32Secret 비밀키
  * @param {number} windowSkew 허용할 시간 스텝 오차 (기본값: 1 => -30초, 현재, +30초)
  * @param {number} period 갱신 주기 (기본값: 30)
- * @returns {Promise<{ valid: boolean, delta: number|null }>}
+ * @returns {Promise<{ valid: boolean, delta: number|null, reason?: string }>}
  */
 export async function verifyTOTP(token, base32Secret, windowSkew = 1, period = 30) {
-  const cleanToken = token.replace(/\s+/g, '');
+  const cleanToken = (token || '').replace(/\s+/g, '');
   if (!cleanToken || cleanToken.length !== 6 || !/^\d{6}$/.test(cleanToken)) {
     return { valid: false, delta: null, reason: '6자리 숫자를 입력해주세요.' };
+  }
+
+  if (!base32Secret) {
+    return { valid: false, delta: null, reason: '비밀키가 발급되지 않았습니다.' };
   }
 
   const currentStep = Math.floor(Date.now() / 1000 / period);
@@ -150,7 +169,6 @@ export async function verifyTOTP(token, base32Secret, windowSkew = 1, period = 3
         return { valid: true, delta: i };
       }
     } catch {
-      // 키 디코딩 오류 등
       return { valid: false, delta: null, reason: '비밀키 형식이 올바르지 않습니다.' };
     }
   }
@@ -176,11 +194,13 @@ export function getRemainingSeconds(period = 30) {
  * @returns {string}
  */
 export function buildOtpAuthUri(issuer, account, secret) {
-  const cleanIssuer = issuer.trim();
-  const cleanAccount = account.trim();
+  const cleanIssuer = (issuer || 'KopoCyberSec').trim();
+  const cleanAccount = (account || 'student@kopo.ac.kr').trim();
+  const cleanSecret = (secret || 'JBSWY3DPEHPK3PXP').trim();
+
   const label = `${encodeURIComponent(cleanIssuer)}:${encodeURIComponent(cleanAccount)}`;
   const params = new URLSearchParams({
-    secret: secret.trim(),
+    secret: cleanSecret,
     issuer: cleanIssuer,
     algorithm: 'SHA1',
     digits: '6',

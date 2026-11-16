@@ -15,28 +15,28 @@ import {
 import { buildOtpAuthUri, verifyTOTP } from '../utils/totp';
 
 export default function ServiceVerifier({
-  issuer,
+  issuer = 'KopoCyberSec',
   setIssuer,
-  account,
+  account = 'student@kopo.ac.kr',
   setAccount,
-  secret,
+  secret = '',
   onGenerateNewSecret,
-  verificationInput,
+  verificationInput = '',
   setVerificationInput
 }) {
   const [copied, setCopied] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState(null); // null | { success: boolean, message: string, timestamp: string }
+  const [verificationResult, setVerificationResult] = useState(null);
   const [allowWindowSkew, setAllowWindowSkew] = useState(true);
 
   // 비밀키 클립보드 복사
   const handleCopySecret = async () => {
+    if (!secret) return;
     try {
       await navigator.clipboard.writeText(secret);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // 클립보드 API 실패 대비
       alert('클립보드 복사에 실패했습니다.');
     }
   };
@@ -88,6 +88,7 @@ export default function ServiceVerifier({
   };
 
   const otpAuthUri = buildOtpAuthUri(issuer, account, secret);
+  const displaySecret = secret ? (secret.match(/.{1,4}/g)?.join(' ') || secret) : '발급 중...';
 
   return (
     <div className="card service-verifier-card">
@@ -146,13 +147,14 @@ export default function ServiceVerifier({
 
         <div className="secret-display-box">
           <KeyRound size={18} className="secret-icon" />
-          <code className="secret-code" title={secret}>
-            {secret.match(/.{1,4}/g)?.join(' ') || secret}
+          <code className="secret-code" title={secret || ''}>
+            {displaySecret}
           </code>
           <button
             type="button"
             className={`btn-icon ${copied ? 'copied' : ''}`}
             onClick={handleCopySecret}
+            disabled={!secret}
             title="비밀키 복사"
           >
             {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -170,14 +172,18 @@ export default function ServiceVerifier({
         </label>
         <div className="qr-container">
           <div className="qr-box">
-            <QRCodeSVG
-              value={otpAuthUri}
-              size={170}
-              level="M"
-              includeMargin={true}
-              bgColor="#ffffff"
-              fgColor="#0f172a"
-            />
+            {otpAuthUri ? (
+              <QRCodeSVG
+                value={otpAuthUri}
+                size={170}
+                level="M"
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#0f172a"
+              />
+            ) : (
+              <div className="qr-placeholder">QR 생성 중...</div>
+            )}
           </div>
           <div className="qr-guide">
             <p className="qr-guide-title">📱 스마트폰 Authenticator 앱으로 스캔하세요</p>
@@ -217,7 +223,7 @@ export default function ServiceVerifier({
             <button
               type="submit"
               className="btn btn-primary verify-btn"
-              disabled={isVerifying || verificationInput.length !== 6}
+              disabled={isVerifying || (verificationInput || '').length !== 6}
             >
               {isVerifying ? '검증 중...' : '인증 검증'}
             </button>

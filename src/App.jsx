@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Copy, KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
@@ -16,12 +16,24 @@ function App() {
   const [otp, setOtp] = useState('')
   const [debugOtps, setDebugOtps] = useState(null)
   const [currentTime, setCurrentTime] = useState(0)
-  const [verificationCode, setVerificationCode] = useState('')
+  const [verificationDigits, setVerificationDigits] = useState(() => Array(6).fill(''))
   const [feedback, setFeedback] = useState(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const verificationInputRefs = useRef([])
+
+  const verificationCode = verificationDigits.join('')
 
   useEffect(() => {
+    const initialSecretId = window.setTimeout(() => {
+      try {
+        const initialSecret = generateSecret()
+        setSecret((currentSecret) => currentSecret || initialSecret)
+      } catch (cause) {
+        setError(`비밀 키를 발급하지 못했습니다: ${cause.message}`)
+      }
+    }, 0)
+
     let intervalId
     const timeoutId = window.setTimeout(() => {
       setCurrentTime(Date.now())
@@ -29,6 +41,7 @@ function App() {
     }, 1000 - (Date.now() % 1000))
 
     return () => {
+      window.clearTimeout(initialSecretId)
       window.clearTimeout(timeoutId)
       window.clearInterval(intervalId)
     }
@@ -72,7 +85,7 @@ function App() {
       setSecret(generateSecret())
       setOtp('')
       setDebugOtps(null)
-      setVerificationCode('')
+      setVerificationDigits(Array(6).fill(''))
       setFeedback(null)
       setError('')
       setCopied(false)
@@ -117,6 +130,52 @@ function App() {
     }
   }
 
+  function updateVerificationDigit(index, value) {
+    const digits = value.replace(/\D/g, '')
+    if (!digits) {
+      setVerificationDigits((current) =>
+        current.map((digit, digitIndex) => (digitIndex === index ? '' : digit)),
+      )
+      setFeedback(null)
+      return
+    }
+
+    if (digits.length > 1) {
+      const pastedDigits = digits.slice(0, 6).split('')
+      setVerificationDigits([...pastedDigits, ...Array(6 - pastedDigits.length).fill('')])
+      verificationInputRefs.current[Math.min(pastedDigits.length, 5)]?.focus()
+    } else {
+      setVerificationDigits((current) =>
+        current.map((digit, digitIndex) => (digitIndex === index ? digits : digit)),
+      )
+      if (index < 5) verificationInputRefs.current[index + 1]?.focus()
+    }
+    setFeedback(null)
+  }
+
+  function handleVerificationKeyDown(index, event) {
+    if (event.key === 'Backspace' && !verificationDigits[index] && index > 0) {
+      verificationInputRefs.current[index - 1]?.focus()
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      event.preventDefault()
+      verificationInputRefs.current[index - 1]?.focus()
+    } else if (event.key === 'ArrowRight' && index < 5) {
+      event.preventDefault()
+      verificationInputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  function handleVerificationPaste(event) {
+    const pastedDigits = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pastedDigits.length === 0) return
+
+    event.preventDefault()
+    const digits = pastedDigits.split('')
+    setVerificationDigits([...digits, ...Array(6 - digits.length).fill('')])
+    verificationInputRefs.current[Math.min(digits.length, 5)]?.focus()
+    setFeedback(null)
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -135,13 +194,13 @@ function App() {
 
       {error && <div className="error-banner" role="alert">{error}</div>}
 
-      <section className="steps" aria-label="인증 단계">
+      <section className="dashboard-grid" aria-label="OTP 등록 및 로그인">
         <article className="panel setup-panel">
           <div className="panel-heading">
             <span className="step-number">01</span>
             <div>
-              <h2>인증기 등록</h2>
-              <p>계정 정보를 입력하고 QR 코드를 스캔하세요.</p>
+              <h2>인증기 설정</h2>
+              <p>계정을 설정하고 QR 코드를 스마트폰으로 스캔하세요.</p>
             </div>
           </div>
 
@@ -172,6 +231,10 @@ function App() {
 
           {secret ? (
             <div className="registration-result">
+              <div className="qr-card">
+                <QRCodeSVG value={otpAuthUri} size={220} level="M" marginSize={2} />
+              </div>
+              <p className="qr-hint">Authenticator 앱에서 QR 코드를 스캔하세요.</p>
               <div className="secret-label">BASE32 비밀 키</div>
               <div className="secret-value">
                 <code>{secret}</code>
@@ -179,10 +242,6 @@ function App() {
                   {copied ? <Check size={17} /> : <Copy size={17} />}
                 </button>
               </div>
-              <div className="qr-card">
-                <QRCodeSVG value={otpAuthUri} size={176} level="M" marginSize={2} />
-              </div>
-              <p className="qr-hint">Authenticator 앱에서 QR 코드를 스캔하세요.</p>
             </div>
           ) : (
             <div className="empty-qr">
@@ -191,15 +250,12 @@ function App() {
               <span>비밀 키를 발급하면 QR 코드가 표시됩니다.</span>
             </div>
           )}
-        </article>
 
-        <div className="right-column">
-          <article className="panel monitor-panel">
-            <div className="panel-heading">
-              <span className="step-number">02</span>
+          <div className="otp-monitor">
+            <div className="monitor-heading">
               <div>
-                <h2>실시간 OTP 모니터</h2>
-                <p>현재 시간 기준으로 생성된 인증 코드</p>
+                <span className="monitor-kicker">02 · LIVE AUTHENTICATOR</span>
+                <h2>현재 예상 OTP</h2>
               </div>
               <span className="live-badge"><span /> LIVE</span>
             </div>
@@ -224,34 +280,50 @@ function App() {
             <div className="monitor-footnote">
               <span className="status-dot" /> 30초마다 자동으로 새로고침됩니다
             </div>
-          </article>
+          </div>
+        </article>
 
-          <article className="panel verify-panel">
+        <article className="panel verify-panel">
+          <div className="verify-intro">
+            <div className="verify-icon"><ShieldCheck size={23} /></div>
             <div className="panel-heading">
-              <span className="step-number">03</span>
               <div>
-                <h2>로그인 확인</h2>
-                <p>스마트폰에 표시된 6자리 코드를 입력하세요.</p>
+                <span className="monitor-kicker">03 · SECOND FACTOR</span>
+                <h2>2단계 인증</h2>
+                <p>Authenticator 앱에 표시된 코드를 입력해 로그인을 완료하세요.</p>
               </div>
             </div>
+          </div>
+          <div className="verify-content">
             <form onSubmit={verifyCode}>
               <label className="code-label" htmlFor="verification-code">인증 코드</label>
-              <input
-                id="verification-code"
-                className="code-input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                placeholder="000000"
-                value={verificationCode}
-                onChange={(event) => {
-                  setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))
-                  setFeedback(null)
-                }}
+              <div
+                className="code-inputs"
+                role="group"
+                aria-label="6자리 인증 코드"
                 aria-describedby={feedback ? 'verification-feedback' : undefined}
-              />
+              >
+                {verificationDigits.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(element) => {
+                      verificationInputRefs.current[index] = element
+                    }}
+                    className="code-input"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                    pattern="[0-9]"
+                    maxLength={6}
+                    aria-label={`인증 코드 ${index + 1}번째 자리`}
+                    placeholder="·"
+                    value={digit}
+                    onChange={(event) => updateVerificationDigit(index, event.target.value)}
+                    onKeyDown={(event) => handleVerificationKeyDown(index, event)}
+                    onPaste={handleVerificationPaste}
+                  />
+                ))}
+              </div>
               <button className="button button-dark verify-button" type="submit">
                 <LockKeyhole size={16} /> 인증하기
               </button>
@@ -266,8 +338,12 @@ function App() {
                 {feedback.message}
               </div>
             )}
-          </article>
-        </div>
+            <div className="verify-tip">
+              <LockKeyhole size={15} />
+              <span>인증 코드는 30초마다 자동으로 변경됩니다.</span>
+            </div>
+          </div>
+        </article>
       </section>
 
       <footer className="page-footer">

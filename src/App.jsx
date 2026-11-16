@@ -1,122 +1,120 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useEffect, useState } from "react";
+import OTPCard from "./components/OTPCard";
+import AddAccount from "./components/AddAccount";
+import { verifyTOTP } from "./utils/totp";
+import "./App.css";
+
+export default function App() {
+  const [accounts, setAccounts] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("otp_accounts") || "[]"
+      );
+    } catch {
+      return [];
+    }
+  });
+
+  const [input, setInput] = useState("");
+  const [selected, setSelected] = useState("");
+  const [result, setResult] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(
+      "otp_accounts",
+      JSON.stringify(accounts)
+    );
+  }, [accounts]);
+
+  const addAccount = account => {
+    setAccounts(prev => [...prev, account]);
+  };
+
+  const deleteAccount = id => {
+    setAccounts(prev => prev.filter(item => item.id !== id));
+  };
+
+  const checkOTP = async () => {
+    const account = accounts.find(item => item.id === selected);
+
+    if (!account) {
+      setResult("계정을 선택하세요.");
+      return;
+    }
+
+    const success = await verifyTOTP(
+      account.secret,
+      input
+    );
+
+    setResult(success ? "인증 성공!" : "인증 실패!");
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+    <main className="app">
+      <header>
+        <div className="logo">🔐</div>
+        <h1>Mobile OTP</h1>
+        <p>안전한 2단계 인증 관리</p>
+      </header>
+
+      <section>
+        <h2>내 인증 계정</h2>
+
+        {accounts.length === 0 && (
+          <p className="empty">
+            등록된 계정이 없습니다.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+        )}
+
+        {accounts.map(account => (
+          <OTPCard
+            key={account.id}
+            account={account}
+            onDelete={deleteAccount}
+          />
+        ))}
+      </section>
+
+      <AddAccount onAdd={addAccount} />
+
+      <section className="verify-section">
+        <h2>OTP 인증 테스트</h2>
+
+        <select
+          value={selected}
+          onChange={e => setSelected(e.target.value)}
         >
-          Count is {count}
+          <option value="">계정 선택</option>
+
+          {accounts.map(account => (
+            <option key={account.id} value={account.id}>
+              {account.issuer} - {account.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          maxLength={6}
+          placeholder="6자리 OTP 입력"
+          value={input}
+          onChange={e =>
+            setInput(e.target.value.replace(/\D/g, ""))
+          }
+        />
+
+        <button onClick={checkOTP}>
+          인증 확인
         </button>
+
+        <p>{result}</p>
       </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <footer>
+        <p>Mobile OTP Authenticator</p>
+        <small>RFC 6238 · TOTP · Web Crypto API</small>
+      </footer>
+    </main>
+  );
 }
-
-export default App

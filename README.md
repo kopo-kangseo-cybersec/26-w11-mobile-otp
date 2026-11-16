@@ -92,9 +92,20 @@ npm run build
 
 ## GitHub Pages 배포
 
-저장소의 `.github/workflows/deploy-pages.yml`은 `dev` 브랜치에 변경 사항을 푸시하면 Vite 앱을 빌드하고 `dist` 결과물을 GitHub Pages에 배포합니다.
+이 프로젝트는 GitHub Pages의 **Deploy from a branch** 방식을 사용합니다. React 원본 파일이 아니라 Vite가 빌드한 정적 사이트 파일을 `dev` 브랜치의 `docs/` 폴더에 게시해야 합니다.
 
-최초 설정 시 저장소의 **Settings → Pages → Build and deployment → Source**에서 **GitHub Actions**를 선택해야 합니다. **Deploy from a branch**로 설정하면 JSX 원본 파일이 게시되어 사이트가 빈 화면으로 보일 수 있습니다. 설정을 바꾼 뒤에는 **Actions → Deploy to GitHub Pages → Run workflow**에서 `dev` 브랜치로 배포를 실행하거나 `dev`에 새 변경 사항을 푸시하세요. 배포 작업이 성공한 뒤 사이트를 새로고침하면 됩니다.
+빌드 결과물은 다음 명령으로 생성합니다. `docs/` 폴더는 배포에 필요한 산출물이므로 변경 사항과 함께 커밋하고 `dev` 브랜치에 푸시하세요.
+
+```bash
+npm run build
+git add docs
+git commit -m "build: GitHub Pages 배포 파일 갱신"
+git push origin dev
+```
+
+GitHub 저장소의 **Settings → Pages → Build and deployment**에서 **Source: Deploy from a branch**, **Branch: `dev`**, 폴더 **`/docs`**를 선택하고 저장합니다. `/(root)`을 선택하면 Vite 원본 파일이 게시되어 앱이 표시되지 않습니다.
+
+이후 앱 코드를 수정할 때마다 `npm run build`를 다시 실행하고 생성된 `docs/` 변경 사항을 커밋·푸시해야 Pages 사이트가 갱신됩니다.
 
 ## Authenticator 앱 연동 테스트
 

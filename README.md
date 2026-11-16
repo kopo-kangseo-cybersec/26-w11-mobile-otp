@@ -46,7 +46,7 @@
 ## 🔗 실행 및 배포 링크
 
 - **GitHub Pages 배포 URL**: [https://saltedsec.github.io/26-w11-mobile-otp/](https://saltedsec.github.io/26-w11-mobile-otp/)
-- **Netlify 배포 URL**: `https://saltedsec-mobile-otp.netlify.app/` *(또는 본인 Netlify 사이트 URL)*
+- **Netlify 배포 URL**: `https://venerable-raindrop-9d1ac6.netlify.app/` *(또는 본인 Netlify 사이트 URL)*
 
 ---
 

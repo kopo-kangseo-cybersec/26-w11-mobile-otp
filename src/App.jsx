@@ -1,14 +1,85 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { KeyRound, Plus, ShieldCheck } from 'lucide-react'
 import AddModal from './components/AddModal.jsx'
 import AccountCard from './components/AccountCard.jsx'
+import { decodeBase32 } from './utils/totp.js'
 import './App.css'
 
+const STORAGE_KEY = 'mobile-otp-accounts-v1'
+
+function isValidSecret(secret) {
+  try {
+    return decodeBase32(secret).length > 0
+  } catch {
+    return false
+  }
+}
+
+function isAccountList(value) {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (account) =>
+        account !== null &&
+        typeof account === 'object' &&
+        typeof account.serviceName === 'string' &&
+        account.serviceName.trim().length > 0 &&
+        typeof account.accountName === 'string' &&
+        account.accountName.trim().length > 0 &&
+        typeof account.secret === 'string' &&
+        isValidSecret(account.secret),
+    )
+  )
+}
+
+function loadSavedAccounts() {
+  try {
+    const storedAccounts = window.localStorage.getItem(STORAGE_KEY)
+    if (storedAccounts === null) {
+      return { accounts: [], error: '' }
+    }
+
+    const parsedAccounts = JSON.parse(storedAccounts)
+    if (!isAccountList(parsedAccounts)) {
+      return {
+        accounts: [],
+        error:
+          '저장된 계정 데이터가 손상되어 불러오지 못했습니다. 기존 데이터는 유지됩니다. 새 계정을 등록하면 새 목록으로 저장됩니다.',
+      }
+    }
+
+    return { accounts: parsedAccounts, error: '' }
+  } catch {
+    return {
+      accounts: [],
+      error:
+        '저장된 계정을 읽지 못했습니다. 브라우저 저장소를 확인한 뒤 다시 시도해 주세요.',
+    }
+  }
+}
+
 function App() {
-  const [accounts, setAccounts] = useState([])
+  const [initialState] = useState(loadSavedAccounts)
+  const [accounts, setAccounts] = useState(initialState.accounts)
+  const [storageError, setStorageError] = useState(initialState.error)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const canPersist = useRef(!initialState.error)
+
+  useEffect(() => {
+    if (!canPersist.current) return
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts))
+      setStorageError('')
+    } catch {
+      setStorageError(
+        '계정 목록을 브라우저에 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.',
+      )
+    }
+  }, [accounts])
 
   function handleAccountComplete(account) {
+    canPersist.current = true
     setAccounts((currentAccounts) => [...currentAccounts, account])
     setIsAddModalOpen(false)
   }
@@ -49,6 +120,12 @@ function App() {
             </span>
           </div>
         </section>
+
+        {storageError && (
+          <p className="storage-message" role="alert">
+            {storageError}
+          </p>
+        )}
 
         {accountCount === 0 ? (
           <section className="empty-state" aria-labelledby="empty-title">
@@ -95,6 +172,10 @@ function App() {
           onComplete={handleAccountComplete}
         />
       )}
+
+      <footer className="security-warning">
+        비밀 키가 이 브라우저에 저장됩니다. 공용 PC에서는 사용 후 계정을 삭제하세요.
+      </footer>
     </div>
   )
 }

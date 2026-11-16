@@ -28,8 +28,8 @@
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
+- Netlify 배포 URL: https://26-w11-mobile-otp.netlify.app
+- GitHub Pages 배포 URL: https://baekseungwon1.github.io/26-w11-mobile-otp/
 
 ## 나만의 확장 기능
 

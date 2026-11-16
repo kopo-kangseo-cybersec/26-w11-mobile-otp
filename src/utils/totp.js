@@ -231,7 +231,7 @@ export async function verifyTOTP(userOtp, secret, window = 1, timeStep = 30) {
  * @returns {string} otpauth URI
  */
 export function generateOtpauthURI(issuer, account, secret) {
-  const safeIssuer = encodeURIComponent(issuer.trim() || 'CyberSecLab');
+  const safeIssuer = encodeURIComponent(issuer.trim() || 'SALTIN-OTP');
   const safeAccount = encodeURIComponent(account.trim() || 'user');
   const safeSecret = secret.trim().toUpperCase().replace(/[^A-Z2-7]/g, '');
 

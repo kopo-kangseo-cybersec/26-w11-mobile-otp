@@ -6,7 +6,7 @@
   padding: 24px 20px 40px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 /* Header */
@@ -16,7 +16,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 18px 24px;
+  padding: 16px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -28,16 +28,32 @@
   gap: 14px;
 }
 
-.shield-icon-wrapper {
+.brand-logo-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: 10px;
-  color: var(--accent-cyan);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.brand-logo-wrapper:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.45);
+  transform: scale(1.05);
+}
+
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-titles h1 {
@@ -99,6 +115,60 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+/* SALTIN(人) Concept Banner */
+.naming-concept-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(13, 20, 36, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 10px;
+  padding: 12px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.concept-icon-wrap {
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.concept-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.concept-formula {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+.concept-formula strong {
+  color: var(--accent-cyan);
+}
+
+.concept-tag {
+  color: #ffffff;
+  font-weight: 800;
+  background: rgba(0, 240, 255, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.concept-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* Split Grid Layout */
 .dashboard-grid {
   display: grid;
@@ -110,6 +180,32 @@
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Brand Hero Card (16:9 Banner) */
+.brand-hero-card {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(0, 240, 255, 0.12);
+  background-color: #080b12;
+  position: relative;
+  display: flex;
+}
+
+.brand-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.brand-hero-card:hover .brand-hero-image {
+  transform: scale(1.02);
 }
 
 /* Cards */

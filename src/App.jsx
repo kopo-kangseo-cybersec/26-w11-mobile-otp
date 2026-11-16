@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  ShieldCheck,
   QrCode,
   RefreshCw,
   Copy,
@@ -11,7 +10,9 @@ import {
   Terminal,
   Cpu,
   Lock,
+  Info,
 } from 'lucide-react';
+import deptLogo from './assets/dept-logo.png';
 import {
   generateSecret,
   calculateTOTP,
@@ -22,7 +23,7 @@ import './App.css';
 
 export default function App() {
   // 상태 관리: 기본 발급자 및 계정 설정
-  const [issuer, setIssuer] = useState('CyberSecLab');
+  const [issuer, setIssuer] = useState('SALTIN-OTP');
   const [account, setAccount] = useState('student@kopo.ac.kr');
   // 초기 비밀 키 생성 (160-bit 암호학적 난수, Lazy State Initialization)
   const [secret, setSecret] = useState(() => generateSecret(20));
@@ -147,17 +148,17 @@ export default function App() {
       {/* Header */}
       <header className="dashboard-header">
         <div className="brand-section">
-          <div className="shield-icon-wrapper">
-            <ShieldCheck size={26} />
+          <div className="brand-logo-wrapper" title="한국폴리텍대학 서울강서캠퍼스 사이버보안과">
+            <img src={deptLogo} alt="사이버보안과 공식 엠블럼" className="brand-logo-img" />
           </div>
           <div className="brand-titles">
             <h1>
-              TOTP 2단계 인증 보안 대시보드
+              SALTIN(人) OTP
               <span style={{ fontSize: '14px', color: 'var(--accent-cyan)' }}>
                 [RFC 6238]
               </span>
             </h1>
-            <p>사이버보안 실습: 순수 Web Crypto API 기반 무전송 모바일 OTP</p>
+            <p>Make It Salted — Zero-Transmission TOTP Security Dashboard</p>
           </div>
         </div>
 
@@ -173,10 +174,37 @@ export default function App() {
         </div>
       </header>
 
+      {/* SALTIN(人) 네이밍 의미 안내 배너 */}
+      <section className="naming-concept-banner">
+        <div className="concept-icon-wrap">
+          <Info size={18} />
+        </div>
+        <div className="concept-content">
+          <div className="concept-formula">
+            <span className="concept-tag">SALTIN(人)</span> ={' '}
+            <strong>Cryptographic Salt</strong> +{' '}
+            <strong>IN</strong> (Zero-Transmission Local Vault) +{' '}
+            <strong>人</strong> (Crafted by Geonil Kim)
+          </div>
+          <p className="concept-desc">
+            외부 서버 전송 없이 브라우저 내부(IN)에서 암호학적 난수(Salt)로 6자리 OTP를 생성하는 보안 전문가(人)의 2FA 대시보드입니다.
+          </p>
+        </div>
+      </section>
+
       {/* 2단 분할 대시보드 그리드 */}
       <div className="dashboard-grid">
         {/* 좌측 패널: 프로비저닝 및 검증 */}
         <section className="panel-card">
+          {/* 브랜드 카드 (16:9 비율) */}
+          <div className="brand-hero-card">
+            <img
+              src="./saltin-brand.png"
+              alt="SALTIN(人) OTP - Developed by: GEONIL KIM (김건일) - Make It Salted"
+              className="brand-hero-image"
+            />
+          </div>
+
           <div className="card-title">
             <QrCode size={18} />
             <span>2FA 프로비저닝 & 사용자 인증 검증</span>
@@ -190,7 +218,7 @@ export default function App() {
                 type="text"
                 value={issuer}
                 onChange={(e) => setIssuer(e.target.value)}
-                placeholder="CyberSecLab"
+                placeholder="SALTIN-OTP"
               />
             </div>
             <div className="input-field">

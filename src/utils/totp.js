@@ -305,3 +305,4 @@ export function generateOtpAuthUrl({
 
   return `otpauth://totp/${label}?${params.toString()}`;
 }
+

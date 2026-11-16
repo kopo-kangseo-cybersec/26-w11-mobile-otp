@@ -90,6 +90,12 @@ npm run dev -- --port 5500 --strictPort
 npm run build
 ```
 
+## GitHub Pages 배포
+
+저장소의 `.github/workflows/deploy-pages.yml`은 `dev` 브랜치에 변경 사항을 푸시하면 Vite 앱을 빌드하고 `dist` 결과물을 GitHub Pages에 배포합니다.
+
+최초 설정 시 저장소의 **Settings → Pages → Build and deployment → Source**에서 **GitHub Actions**를 선택해야 합니다. **Deploy from a branch**로 설정하면 JSX 원본 파일이 게시되어 사이트가 빈 화면으로 보일 수 있습니다. 설정을 바꾼 뒤에는 **Actions → Deploy to GitHub Pages → Run workflow**에서 `dev` 브랜치로 배포를 실행하거나 `dev`에 새 변경 사항을 푸시하세요. 배포 작업이 성공한 뒤 사이트를 새로고침하면 됩니다.
+
 ## Authenticator 앱 연동 테스트
 
 1. 페이지를 열면 기본 발급자와 계정명의 비밀 키 및 QR 코드가 자동으로 표시됩니다. 원하는 계정 정보로 등록하려면 발급자·계정명을 먼저 입력하고 **새 비밀 키 발급**을 누릅니다.

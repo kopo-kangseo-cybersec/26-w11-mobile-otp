@@ -1,36 +1,56 @@
 # 모바일 OTP — TOTP 2단계 인증 (`26-w11-mobile-otp`)
 
-> 이 README는 실습을 완성한 뒤, 배포 직전 단계에서 직접 채워 넣습니다.
-> 실습 안내와 완성 기준은 [`guide.md`](./guide.md)를 참고하세요.
-
 ## 소개
 
-<!--
-내가 기획하고 만든 모바일 OTP 웹앱이 어떤 컨셉인지 간단히 소개해 주세요.
-(예: Google Authenticator 스타일의 OTP 관리 앱, 로그인+2단계 인증 시뮬레이터, 둘을 결합한 대시보드 등)
--->
+Authenticator 앱처럼 동작하는 모바일 친화형 TOTP 체험 앱입니다. 서비스·계정 이름을 입력하고 새 비밀 키를 발급하면 `otpauth://` QR 코드와 6자리 인증 코드가 만들어집니다. 스마트폰 Authenticator 앱으로 QR 코드를 스캔하고, 앱의 코드를 입력해 검증할 수 있습니다.
+
+## 기능
+
+- `crypto.getRandomValues()`로 160-bit Base32 비밀 키 생성
+- `crypto.subtle`의 HMAC-SHA1과 RFC 6238 30초 주기로 6자리 코드 계산
+- Authenticator 앱에서 읽을 수 있는 `otpauth://totp/` QR 코드 생성
+- 30초 카운트다운 및 현재 코드 검증
+- 화면 크기에 맞춘 모바일 레이아웃
+
+비밀 키와 OTP 계산은 브라우저 안에서 처리합니다. 비밀 키는 저장소에 저장되지 않으며, QR 코드에는 비밀 키가 포함되므로 다른 사람과 공유하지 마세요. 개발 서버와 빌드에는 패키지 설치·배포를 위한 네트워크 연결이 필요할 수 있지만, 앱의 OTP 연산을 위해 외부 API 서버로 비밀 키를 보내지 않습니다. 배포 후 브라우저 개발자 도구의 Network 탭에서도 확인해 주세요.
+
+## 실행
+
+```bash
+npm install
+npm run dev
+```
+
+Web Crypto API를 사용하므로 `localhost` 또는 HTTPS 환경에서 실행해야 합니다.
+
+## 검증
+
+```bash
+npm run build
+npm run lint
+```
+
+Google Authenticator로 QR을 스캔하고 웹앱과 같은 시간 구간의 OTP가 일치하며 코드 검증에 성공하는 것을 확인했습니다. 비밀 키는 화면에서 가리고 공유하세요. Network 탭의 외부 전송 여부는 브라우저 개발자 도구에서 직접 확인할 수 있습니다.
 
 ## 나의 AI 기획·구현 과정
 
-<!--
-1. 이번 주에 어떤 AI 협업 방식을 선택했나요? (Gemini 웹에서 먼저 기획 후 Antigravity IDE 구현 / Antigravity IDE에서 Implementation Plan 기반 대화형 설계 / VS Code Copilot 병행 등)
-2. 처음부터 스스로 기획하고 설계하면서 어떤 화면과 기능을 구상했나요?
-3. 구현 중 가장 막혔던 문제(예: 스마트폰 앱과 6자리 코드 불일치, Base32 변환, 타이머 동기화 등)는 무엇이었고, 어떻게 해결했나요?
--->
+VS Code의 Copilot을 활용해 Vite 기본 화면을 TOTP 체험 스튜디오로 구현했습니다. 화면은 QR 연결, 실시간 코드 확인, 사용자 입력 코드 검증의 세 단계로 구성했습니다. TOTP 알고리즘은 UI에서 분리한 `src/utils/totp.js`에 두고, Base32 변환·64-bit Big-Endian 카운터·HMAC-SHA1 동적 절단을 구현했습니다.
 
-## TOTP 원리 및 보안 점검 (사이버보안과 체크포인트)
-
-<!--
-1. 비밀 키(Secret Key)를 만들 때 Math.random() 대신 crypto.getRandomValues()를 사용해야 하는 이유는 무엇인가요?
-2. 비밀번호/OTP 생성 및 검증 연산을 외부 서버가 아닌 브라우저(Web Crypto API / crypto.subtle)에서 직접 처리하면 어떤 보안상 이점이 있나요? (개발자 도구 Network 탭 확인 결과 포함)
-3. 스마트폰 Authenticator 앱(Google/Microsoft Authenticator 등)으로 QR 코드를 스캔했을 때 PC 화면과 6자리 번호가 일치했나요?
--->
+구현 과정에서는 30초 구간의 남은 시간을 Unix 시각에 맞춰 계산하고, 코드가 구간 경계에서만 갱신되도록 했습니다. 서비스·계정 이름을 수정하면 QR의 `otpauth://` 정보도 함께 바뀝니다. Google Authenticator에서 QR을 등록해 웹앱과 같은 시간 구간의 코드가 일치하는 것을 확인했습니다.
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
+- Netlify 배포 URL: https://reliable-malabi-f559ae.netlify.app
+- GitHub Pages 배포 URL: https://yoooooeun.github.io/26-w11-mobile-otp/
+
+GitHub Pages 배포 명령:
+
+```bash
+npm run deploy
+```
 
 ## 나만의 확장 기능
 
-<!-- 기본 4가지 기준 외에 스스로 기획해 추가한 기능(예: 다중 계정 저장, 백업 복구 코드, 시간 오차 허용 등)을 적어주세요 -->
+- 서비스·계정 이름을 편집해 QR 라벨과 발급자 정보를 구성
+- 비밀 키 복사 기능과 QR 코드 공유 주의 안내
+- 화면 내 검증 결과 및 6자리 입력 전용 UI

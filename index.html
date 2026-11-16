@@ -1,13 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>모바일 OTP (TOTP 2단계 인증)</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zero-Trust TOTP Studio | 모바일 OTP 체험 시뮬레이터</title>
+  <!-- 브라우저 전역 객체(qrcode)를 안정적으로 지원하는 QR 생성 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="badge">RFC 6238 표준 · Web Crypto API (Zero-Transmission)</div>
+      <h1>🔐 모바일 OTP 실시간 동기화 스튜디오</h1>
+      <p>비밀 키 생성부터 스마트폰 Authenticator 연동, 30초 실시간 코드 검증까지 브라우저 내에서 안전하게 테스트하세요.</p>
+    </header>
+
+    <section class="card setup-bar">
+      <div class="input-group">
+        <label for="issuerInput">발급자 (서비스명)</label>
+        <input type="text" id="issuerInput" value="MySecurityLab" placeholder="예: GitHub, Naver" />
+      </div>
+      <div class="input-group">
+        <label for="accountInput">계정 (이메일/ID)</label>
+        <input type="text" id="accountInput" value="user@example.com" placeholder="user@example.com" />
+      </div>
+      <button id="generateKeyBtn" class="btn primary">🔄 새 비밀 키 발급 & QR 갱신</button>
+    </section>
+
+    <main class="studio-grid">
+      <section class="card panel">
+        <div class="panel-header">
+          <span class="step-tag">STEP 1 & 4</span>
+          <h2>🌐 웹 서비스 (인증 서버 역할)</h2>
+        </div>
+
+        <div class="qr-section">
+          <canvas id="qrCanvas" width="190" height="190"></canvas>
+          <div class="secret-box">
+            <span class="label">Base32 비밀 키 (window.crypto 생성)</span>
+            <div class="secret-row">
+              <code id="secretDisplay">생성 중...</code>
+              <button id="copySecretBtn" class="btn small" title="비밀 키 복사">복사</button>
+            </div>
+          </div>
+          <p class="hint">📱 스마트폰에서 <strong>Google / Microsoft Authenticator</strong> 앱을 열고 위 QR 코드를 스캔하세요.</p>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="verify-section">
+          <h3>6자리 OTP 번호 검증</h3>
+          <div class="verify-form">
+            <input type="text" id="otpInput" maxlength="6" inputmode="numeric" placeholder="000000" autocomplete="off" />
+            <button id="verifyBtn" class="btn success">인증 확인</button>
+          </div>
+          <label class="toggle-label">
+            <input type="checkbox" id="windowTolerance" checked />
+            <span>시간 오차 ±1 스텝 (앞뒤 30초) 허용</span>
+          </label>
+          <div id="verifyResult" class="result-box hidden"></div>
+        </div>
+      </section>
+
+      <section class="card panel authenticator-panel">
+        <div class="panel-header">
+          <span class="step-tag">STEP 2 & 3</span>
+          <h2>📱 가상 Authenticator (예상 OTP 모니터)</h2>
+        </div>
+
+        <div class="auth-card">
+          <div class="auth-meta">
+            <span id="displayIssuer" class="issuer-name">MySecurityLab</span>
+            <span id="displayAccount" class="account-name">user@example.com</span>
+          </div>
+
+          <div class="otp-display-wrap">
+            <div id="liveOtpCode" class="otp-digits">--- ---</div>
+            <button id="autoFillBtn" class="btn small outline" title="왼쪽 입력창에 자동 입력">입력창에 채우기 ↙</button>
+          </div>
+
+          <div class="timer-wrap">
+            <div class="progress-bar">
+              <div id="timerProgress" class="progress-fill"></div>
+            </div>
+            <div class="timer-text">
+              <span>다음 코드 갱신까지</span>
+              <strong id="secondsLeft">30초</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="security-info">
+          <h4>🛡️ 보안 체크포인트 확인</h4>
+          <ul>
+            <li><strong>무전송 원칙:</strong> 개발자 도구(<code>F12</code>) → <code>Network</code> 탭에서 외부 서버 통신이 0건인지 확인해 보세요.</li>
+            <li><strong>시간 동기화:</strong> 스마트폰과 PC의 현재 시각(UTC)이 같다면 오프라인 상태에서도 동일한 6자리 숫자가 계산됩니다.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
 </html>

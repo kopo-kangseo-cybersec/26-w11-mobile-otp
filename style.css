@@ -1,0 +1,376 @@
+:root {
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success: #10b981;
+  --danger: #ef4444;
+  --border: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
+}
+
+.header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.setup-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+input[type='text'] {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type='text']:focus {
+  border-color: var(--primary);
+}
+
+.btn {
+  padding: 0.68rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn.success {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn.success:hover {
+  filter: brightness(0.95);
+}
+
+.btn.small {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.studio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .studio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel-header {
+  margin-bottom: 1.25rem;
+}
+
+.step-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.04em;
+}
+
+.panel-header h2 {
+  font-size: 1.2rem;
+  margin-top: 0.15rem;
+}
+
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#qrCanvas {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.4rem;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.secret-box {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.secret-box .label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.secret-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.secret-row code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  color: #0f172a;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.25rem 0;
+}
+
+.verify-section h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.verify-form {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+}
+
+#otpInput {
+  flex: 1;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-align: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.result-box {
+  margin-top: 0.9rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.result-box.hidden {
+  display: none;
+}
+
+.result-box.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.result-box.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* 오른쪽 패널 (Authenticator) */
+.auth-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #f8fafc;
+  border-radius: 14px;
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-meta {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.issuer-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #38bdf8;
+}
+
+.account-name {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.otp-display-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.otp-digits {
+  font-family: 'Fira Code', monospace;
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.otp-digits.urgent {
+  color: #f87171;
+}
+
+.auth-card .btn.outline {
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.auth-card .btn.outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #334155;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.45rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #38bdf8;
+  transition: width 0.25s linear, background-color 0.2s;
+}
+
+.progress-fill.urgent {
+  background: #ef4444;
+}
+
+.timer-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.security-info {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.security-info h4 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.security-info ul {
+  padding-left: 1.15rem;
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+.security-info li + li {
+  margin-top: 0.35rem;
+}

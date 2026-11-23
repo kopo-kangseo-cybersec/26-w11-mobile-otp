@@ -55,8 +55,8 @@
 
 ## 🚀 실행 및 배포 링크
 
-- **Netlify 배포 URL**: https://26-w11-mobile-otp.netlify.app (배포 후 업데이트 예정)
-- **GitHub Pages 배포 URL**: https://kopo-kangseo-cybersec.github.io/26-w11-mobile-otp/ (배포 후 업데이트 예정)
+- **Netlify 배포 URL**: 26-w11-mobile-otp-lyr.netlify.app/ (배포 후 업데이트 예정)
+- **GitHub Pages 배포 URL**: https://parksj1999.github.io/26-w11-mobile-otp/ (배포 후 업데이트 예정)
 
 ---
 
